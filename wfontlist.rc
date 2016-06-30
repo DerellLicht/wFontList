@@ -1,0 +1,37 @@
+//****************************************************************************
+//  Copyright (c) 2010-2012  Daniel D Miller
+//  wfontlist.exe - a Win32 font-listing program
+//
+//  Written/integrated by:  Dan Miller
+//****************************************************************************
+//  Interesting notes about this file:
+//
+//  > SS_NOTIFY and "Static" controls
+//    If SS_NOTIFY is not specified in the control styles,
+//    you cannot attach tooltips to the control.
+//
+//****************************************************************************
+#include <windows.h>
+
+#include "resource.h"
+
+IDI_APPICON   ICON      "fonts2.ico"
+
+#define	 MAIN_DX	500
+#define  LABEL_DX	26
+#define	 SAMPLE_DX	(MAIN_DX - LABEL_DX - 10)
+
+IDD_MAIN_DIALOG DIALOGEX 200, 50, MAIN_DX, 400
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX
+EXSTYLE WS_EX_APPWINDOW
+CAPTION "wFontList"
+FONT 10, "Times New Roman"
+// FONT 12, "MS Sans Serif"
+BEGIN
+   //  Note: SS_NOTIFY allows a static control to generate tooltip messages
+   DEFPUSHBUTTON  "Show Fonts", IDB_SHOW_FONTS, 10,  2,        80, 10,WS_TABSTOP
+
+   LTEXT          "Sample:",  	IDC_STATIC,      4, 16,  LABEL_DX, 10,SS_NOTIFY
+   LTEXT          "",           IDC_WORDS,      30, 14, SAMPLE_DX, 12,SS_SUNKEN
+END
+
