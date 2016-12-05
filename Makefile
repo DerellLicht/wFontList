@@ -15,13 +15,13 @@ CFLAGS += -Weffc++
 CFLAGS += -DUNICODE -D_UNICODE
 
 # link library files
-CFLAGS += -I../der_libs
-CSRC=../der_libs/common_funcs.cpp \
-../der_libs/common_win.cpp \
-../der_libs/statbar.cpp \
-../der_libs/wthread.cpp \
-../der_libs/winmsgs.cpp \
-../der_libs/vlistview.cpp 
+CFLAGS += -Ider_libs
+CSRC=der_libs/common_funcs.cpp \
+der_libs/common_win.cpp \
+der_libs/statbar.cpp \
+der_libs/wthread.cpp \
+der_libs/winmsgs.cpp \
+der_libs/vlistview.cpp 
 
 # add application files
 CSRC+=wfontlist.cpp font_list.cpp getfontfile.cpp
@@ -60,14 +60,14 @@ rc.o: wfontlist.rc
 
 # DO NOT DELETE
 
-../der_libs/common_funcs.o: ../der_libs/common.h
-../der_libs/common_win.o: ../der_libs/common.h ../der_libs/commonw.h
-../der_libs/statbar.o: ../der_libs/statbar.h
-../der_libs/wthread.o: ../der_libs/wthread.h
-../der_libs/vlistview.o: ../der_libs/common.h ../der_libs/commonw.h
-../der_libs/vlistview.o: ../der_libs/vlistview.h
-wfontlist.o: resource.h ../der_libs/common.h ../der_libs/commonw.h
-wfontlist.o: ../der_libs/statbar.h ../der_libs/vlistview.h font_list.h
-font_list.o: ../der_libs/common.h ../der_libs/commonw.h
-font_list.o: ../der_libs/vlistview.h font_list.h
-getfontfile.o: ../der_libs/common.h ../der_libs/commonw.h
+der_libs/common_funcs.o: der_libs/common.h
+der_libs/common_win.o: der_libs/common.h der_libs/commonw.h
+der_libs/statbar.o: der_libs/common.h der_libs/commonw.h der_libs/statbar.h
+der_libs/wthread.o: der_libs/wthread.h
+der_libs/vlistview.o: der_libs/common.h der_libs/commonw.h
+der_libs/vlistview.o: der_libs/vlistview.h
+wfontlist.o: resource.h der_libs/common.h der_libs/commonw.h
+wfontlist.o: der_libs/statbar.h der_libs/vlistview.h font_list.h
+font_list.o: der_libs/common.h der_libs/commonw.h der_libs/vlistview.h
+font_list.o: font_list.h
+getfontfile.o: der_libs/common.h der_libs/commonw.h
