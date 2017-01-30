@@ -607,11 +607,11 @@ static bool do_getminmaxinfo(HWND hwnd, UINT message, WPARAM wParam, LPARAM lPar
       POINT        ptTemp;
       // syslog("set minimum to %ux%u\n", cxClient, cyClient);
       //  set minimum dimensions
-      ptTemp.x = cxClient ;  //  empirical value
+      ptTemp.x = cxClient + 11;  //  empirical value
       ptTemp.y = cyClient ;  //  empirical value
       lpTemp->ptMinTrackSize = ptTemp;
       //  set maximum dimensions
-      ptTemp.x = cxClient ;
+      ptTemp.x = cxClient + 11;
       ptTemp.y = get_screen_height() ;
       lpTemp->ptMaxTrackSize = ptTemp;
       // lpTemp->ptMaxSize = ptTemp;
