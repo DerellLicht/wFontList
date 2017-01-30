@@ -1,3 +1,4 @@
+SHELL=cmd.exe
 USE_DEBUG = NO
 
 ifeq ($(USE_DEBUG),YES)

@@ -50,19 +50,19 @@ void get_font_path(void)
 //*******************************************************************
 // user app path=[C:\Users\derelict\AppData\Roaming]
 //*******************************************************************
-static TCHAR user_home_path[PATH_MAX] ;
+// static TCHAR user_home_path[PATH_MAX] ;
 
-void get_user_app_path(void)
-{
-   user_home_path[0] = 0 ;
-   // int result = 
-   SHGetFolderPath(NULL, CSIDL_APPDATA, NULL, 0, user_home_path) ;
-   // if (result == S_OK) {
-      syslogW(_T("user app path=[%s]\n"), user_home_path) ;
-   // } else {
-   //    syslogW(_T("SHGetFolderPath: something went wrong\n")) ;
-   // }
-}
+// void get_user_app_path(void)
+// {
+//    user_home_path[0] = 0 ;
+//    // int result = 
+//    SHGetFolderPath(NULL, CSIDL_APPDATA, NULL, 0, user_home_path) ;
+//    // if (result == S_OK) {
+//       syslogW(_T("user app path=[%s]\n"), user_home_path) ;
+//    // } else {
+//    //    syslogW(_T("SHGetFolderPath: something went wrong\n")) ;
+//    // }
+// }
 
 //********************************************************************************
 extern uint operating_mode ;  //  0=remove, 1=enumerate

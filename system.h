@@ -16,5 +16,3 @@ void center_dialog_on_screen(HWND hDlg);
 //  general system functions
 void get_monitor_dimens(HWND hwnd);
 bool are_normal_fonts_active(void);
-int wait_for_event(HANDLE hEvent, uint timeout_secs);
-

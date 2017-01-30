@@ -1,5 +1,7 @@
 //  lint rules
 
+//lint -e1066  Symbol declared as "C" conflicts with line ..., file ...
+
 //  eternal erroneous lint errors in working system headers
 // Error 10: Expecting '}'
 // Error 96: Unmatched left brace for linkage specification on line 8, file \mingw\include\rpcdce.h

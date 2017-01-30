@@ -5,6 +5,9 @@
 //
 //  Produced and Directed by:  Dan Miller
 //****************************************************************************
+
+//  Following is required, to make MONITOR_DEFAULTTONEAREST known
+//lint -esym(767, _WIN32_WINNT)
 #define  _WIN32_WINNT   0x0501
 #include <windows.h>
 #include <tchar.h>
@@ -23,6 +26,9 @@ static uint screen_width  = 0 ;
 static uint screen_height = 0 ;
 
 //****************************************************************************
+//lint -esym(714, get_monitor_dimens)
+//lint -esym(759, get_monitor_dimens)
+//lint -esym(765, get_monitor_dimens)
 void get_monitor_dimens(HWND hwnd)
 {
    HMONITOR currentMonitor;      // Handle to monitor where fullscreen should go
@@ -37,18 +43,27 @@ void get_monitor_dimens(HWND hwnd)
 }
 
 //****************************************************************************
+//lint -esym(714, get_screen_width)
+//lint -esym(759, get_screen_width)
+//lint -esym(765, get_screen_width)
 uint get_screen_width(void)
 {
    return screen_width ;
 }
 
 //****************************************************************************
+//lint -esym(714, get_screen_height)
+//lint -esym(759, get_screen_height)
+//lint -esym(765, get_screen_height)
 uint get_screen_height(void)
 {
    return screen_height ;
 }
 
 //********************************************************************************
+//lint -esym(714, center_dialog_on_screen)
+//lint -esym(759, center_dialog_on_screen)
+//lint -esym(765, center_dialog_on_screen)
 void center_dialog_on_screen(HWND hDlg)
 {
    if (screen_width == 0  ||  screen_height == 0) {
@@ -75,6 +90,9 @@ bool are_normal_fonts_active(void)
 //****************************************************************************
 //  return true if recalculation was required, false otherwise
 //****************************************************************************
+//lint -esym(714, cp_recalc_dlu_width)
+//lint -esym(759, cp_recalc_dlu_width)
+//lint -esym(765, cp_recalc_dlu_width)
 bool cp_recalc_dlu_width(uint *psheet_dx)
 {
    uint curr_dpi = GetScreenDPI() ;

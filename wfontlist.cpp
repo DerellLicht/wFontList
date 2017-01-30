@@ -46,13 +46,21 @@ static HINSTANCE g_hinst = 0;
 
 static uint current_cursor = 0 ;
 
+// typedef struct lv_cols_s {
+//    TCHAR *txt ;
+//    uint cx ;
+//    bool active ;
+//    uint menu_id ;
+//    bool touched ; //  this is used to mark updated elements
+//    void (*renderFunc)(void *private_data, uint curr_rows, uint iSubItem) ;
+// } lv_cols_t, *lv_cols_p ;
 //  headers for the main listview control
 static lv_cols_t my_lv_cols[] = {
-{ _T("Font Name"), 520 },
-{ _T("Charset"),   100 },
-{ _T("Pitch"),     110 },
-{ _T("Family"),      0 },
-{ 0, 50 }} ;
+{ _T("Font Name"), 520, false, 0, false, NULL },
+{ _T("Charset"),   100, false, 0, false, NULL },
+{ _T("Pitch"),     110, false, 0, false, NULL },
+{ _T("Family"),      0, false, 0, false, NULL },
+{ 0, 50, false, 0, false, NULL }} ;
 
 static CStatusBar *MainStatusBar = NULL;
 static CVListView *VListView = NULL ;
@@ -519,11 +527,11 @@ static void resize_font_dialog(bool resize_on_drag)
    int dx_offset = 5, dy_offset = 0;
    // syslog("resize terminal, drag=%s\n", (resize_on_drag) ? "true" : "false") ;
 
-   uint new_window_width, new_window_height ;
+   uint new_window_height ;
    if (resize_on_drag) {
       //  if resizing on drag-and-drop, re-read main-dialog size
       GetClientRect(hwndMain, &myRect) ;
-      new_window_width  = (uint) (myRect.right - myRect.left) ;
+      // new_window_width  = (uint) (myRect.right - myRect.left) ;
       new_window_height = (uint) (myRect.bottom - myRect.top) ;
 
       if (term_window_height == new_window_height)
@@ -592,13 +600,14 @@ static bool do_sizing(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam, LPV
          break;
       }
       break;
-   }
+   }  //lint !e744
    return false ;
 }
 
 //*******************************************************************
 //  DDM 01/29/17 - These minima are not actually working;
 //  Perhaps this is due to Windowblinds ??
+//  Yes; this works fine on standard Windows 7
 //*******************************************************************
 static bool do_getminmaxinfo(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam, LPVOID private_data)
 {
@@ -610,7 +619,7 @@ static bool do_getminmaxinfo(HWND hwnd, UINT message, WPARAM wParam, LPARAM lPar
       // syslog("set minimum to %ux%u\n", cxClient, cyClient);
       //  set minimum dimensions
       ptTemp.x = term_window_width + 11;  //  empirical value
-      ptTemp.y = term_window_height ;  //  empirical value
+      ptTemp.y = term_window_height ;     //  empirical value
       lpTemp->ptMinTrackSize = ptTemp;
       //  set maximum dimensions
       ptTemp.x = term_window_width + 11;
@@ -618,12 +627,12 @@ static bool do_getminmaxinfo(HWND hwnd, UINT message, WPARAM wParam, LPARAM lPar
       lpTemp->ptMaxTrackSize = ptTemp;
       // lpTemp->ptMaxSize = ptTemp;
       }         
-      return 0 ;
+      return false ;
 
    default:
       break;
    }
-   return 1 ;
+   return true ;
 }
 
 
