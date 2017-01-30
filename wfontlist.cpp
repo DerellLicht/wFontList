@@ -1,5 +1,5 @@
 //**********************************************************************
-//  Copyright (c) 2009-2013  Daniel D Miller
+//  Copyright (c) 2009-2017  Daniel D Miller
 //  wfontlist.exe - A WinApi font-lister program
 //  
 //  Written by:   Daniel D. Miller
@@ -16,13 +16,15 @@
 //             > move common libs and classes to separate directory
 //    1.07     Add option to remove font(s), via right-click menu
 //    1.08     Fix ERROR_MORE_DATA in RegEnumValue()
+//    1.09     > Automatically load font list at startup
+//             > make dialog height resizable
 //****************************************************************************
 
 #include <windows.h>
 #include <tchar.h>
 // #include <shlobj.h>  //  including this, causes CDDS_PREPAINT and others to be undefined !!
 
-static const TCHAR* VerNum = _T("V1.08") ;
+static const TCHAR* VerNum = _T("V1.09") ;
 static char szClassName[] = "WFontList" ;
 
 #include "resource.h"
@@ -31,6 +33,7 @@ static char szClassName[] = "WFontList" ;
 #include "statbar.h"
 #include "vlistview.h"
 #include "font_list.h"
+#include "system.h"
 
 //  getfontfile.cpp
 extern void get_font_path(void);
@@ -67,6 +70,12 @@ static HWND hwndSample = 0 ;
 //  Otherwise, I got "underlined *" instead of "&*"
 static TCHAR const * const sample_text = TEXT("ABCDEFabcdef0123456789`~!@#$%^&&*()_+-={}|[]\\:\";'<>?,./") ;
 
+#define  TERM_MIN_DX    860  
+#define  TERM_MIN_DY    1024  
+
+static uint term_window_width  = TERM_MIN_DX ;
+static uint term_window_height = TERM_MIN_DY ;
+
 //*******************************************************************
 static void status_message(TCHAR *msgstr)
 {
@@ -84,6 +93,18 @@ void redraw_font_list(void)
 {
    PostMessage(hwndMain, WM_COMMAND, ((BN_CLICKED << 16) | IDB_SHOW_FONTS), 0);
 }
+
+//****************************************************************************
+static uint get_terminal_top(void)
+{
+   static uint local_ctrl_top = 0 ;
+   if (local_ctrl_top == 0) {
+      local_ctrl_top = get_bottom_line(hwndMain, IDC_WORDS) ;
+      local_ctrl_top += 3 ;
+      // syslog("CommPort: ctrl_top = %u, or %u\n", local_ctrl_top, win_ctrl_top+3) ;
+   }
+   return local_ctrl_top ;
+}  //lint !e715
 
 //****************************************************************************
 static HFONT get_font_pointer(uint item_num)
@@ -252,14 +273,21 @@ static bool do_init_dialog(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam
    wsprintf(msgstr, _T("wFontList %s"), VerNum) ;
    SetWindowText(hwnd, msgstr) ;
    hwndMain = hwnd ;
+   get_monitor_dimens(hwnd);
 
    SendMessage(hwnd, WM_SETICON, ICON_BIG,   (LPARAM) LoadIcon(g_hinst, MAKEINTRESOURCE(IDI_APPICON)));
    SendMessage(hwnd, WM_SETICON, ICON_SMALL, (LPARAM) LoadIcon(g_hinst, MAKEINTRESOURCE(IDI_APPICON)));
 
    //  get dimensions of main client area
-   GetWindowRect(hwnd, &mainRect) ;
+   // GetWindowRect(hwnd, &mainRect) ;
+   GetClientRect(hwnd, &mainRect) ;
    cxClient = (uint) (mainRect.right  - mainRect.left) ;
    cyClient = (uint) (mainRect.bottom - mainRect.top ) ;
+   term_window_width  = cxClient ;
+   term_window_height = cyClient ;
+   // Client area: 883x784
+   // stTop=752, cyStatus=22
+   syslog("Client area: %ux%u\n", cxClient, cyClient);
 
    //****************************************************************
    //  create/configure status bar first
@@ -278,8 +306,10 @@ static bool do_init_dialog(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam
    //  create listview class second, needs status-bar height
    //****************************************************************
    {
-   uint lvy0 = 55 ;  //  bottom of other controls
-   uint fudge_factor = 25 ;
+   // uint lvy0 = 55 ;  //  bottom of other controls
+   uint lvy0 = get_terminal_top();
+   // uint fudge_factor = 75 ;
+   uint fudge_factor = 0 ;
    uint lvdy = cyClient - lvy0 - MainStatusBar->height() - fudge_factor ;
    VListView = new CVListView(hwnd, IDC_TERMINAL, g_hinst, 0, lvy0, cxClient-7, lvdy,
          LVL_STY_VIRTUAL | LVL_STY_EX_GRIDLINES);
@@ -296,6 +326,8 @@ static bool do_init_dialog(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam
    //  create font-list class third, needs VListView control
    //****************************************************************
    FontList = new CFontList(VListView) ;
+
+   redraw_font_list();
    return true ;
 }
 
@@ -469,6 +501,130 @@ static bool do_destroy(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam, LP
    return true ;
 }
 
+//********************************************************************************************
+//  okay, this function originally gave inaccurate results,
+//  because the rectangle passed by WM_SIZING was from GetWindowRect(),
+//  which included the unwanted border area, rather than from
+//  GetClientRect(), which works with get_bottom_line().
+//********************************************************************************************
+//  04/26/13 
+//  WM_SIZING is generated every pixel or two of movement; we *wont* want to be resizing
+//  the entire dialog that frequently!!  We need to somehow slow this down a bit...
+//********************************************************************************************
+static void resize_font_dialog(bool resize_on_drag)
+{
+   RECT myRect ;
+   int dx_offset, dy_offset ;
+   // syslog("resize terminal, drag=%s\n", (resize_on_drag) ? "true" : "false") ;
+
+   uint new_window_width, new_window_height ;
+   if (resize_on_drag) {
+      //  if resizing on drag-and-drop, re-read main-dialog size
+      GetClientRect(hwndMain, &myRect) ;
+      new_window_width  = (uint) (myRect.right - myRect.left) ;
+      new_window_height = (uint) (myRect.bottom - myRect.top) ;
+
+      if (term_window_width  == new_window_width  &&
+          term_window_height == new_window_height)
+          return ;
+
+      // dx_offset = 6 ;
+      // dy_offset = 5 ;
+      // CPortTabControl->resize_window(new_window_width-dx_offset, new_window_height-dy_offset) ;
+      term_window_width  = new_window_width  ;
+      term_window_height = new_window_height ;
+
+      // change_terminal_pixels(term_window_width, term_window_height) ;
+      dx_offset =  3 ;
+      dy_offset =  4 ;
+      if (!are_normal_fonts_active()) {
+         // syslog("acting on large fonts\n") ;
+         // dx_offset = 7 ;
+         dy_offset = 2 ;
+      }
+
+   } 
+   // else {
+   //    resize_window(hwndTerminal, term_window_width, term_window_height) ;
+   //    dx_offset = TERM_INIT_XOFFSET ;
+   //    dy_offset = TERM_INIT_YOFFSET ;
+   //    // if (are_large_fonts_active(hwndTerminal)) {
+   //    if (!are_normal_fonts_active()) {
+   //       dx_offset -= 5 ;
+   //       dy_offset -= 6 ;
+   //    }
+   // }
+
+   //  resize the terminal (cols)
+   int dxi = term_window_width  - dx_offset ;   //lint !e737
+   int dyi = term_window_height - dy_offset - get_terminal_top() ;   //lint !e737
+   // VListView->resize_terminal_pixels(dxi, dyi) ;
+   VListView->resize(dxi, dyi); //  dialog is actually drawn a few pixels too small for text
+   // set_terminal_dimens() ;  //  do this *after* resize()
+   VListView->resize_column(dxi-25) ; //  make this narrower than new_dx, to allow for scroll bar
+   // set_terminal_sizing(true);
+   // if (resize_on_drag) {
+   //    save_cfg_file() ;
+   // }
+}
+
+//*******************************************************************
+static bool do_sizing(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam, LPVOID private_data)
+{
+   //  handle main-dialog resizing
+   switch (message) {
+   case WM_SIZING:
+      switch (wParam) {
+      case WMSZ_BOTTOMLEFT:
+      case WMSZ_BOTTOMRIGHT:
+      case WMSZ_TOPLEFT:
+      case WMSZ_TOPRIGHT:
+      case WMSZ_LEFT:
+      case WMSZ_RIGHT:
+      case WMSZ_TOP:
+      case WMSZ_BOTTOM:
+         resize_font_dialog(true);
+         return true;
+
+      default:
+         break;
+      }
+      break;
+   }
+   return false ;
+}
+
+//*******************************************************************
+//  DDM 01/29/17 - These minima are not actually working;
+//  Perhaps this is due to Windowblinds ??
+//*******************************************************************
+static bool do_getminmaxinfo(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam, LPVOID private_data)
+{
+   switch (message) {
+   case WM_GETMINMAXINFO:
+      {
+      LPMINMAXINFO lpTemp = (LPMINMAXINFO) lParam;
+      POINT        ptTemp;
+      // syslog("set minimum to %ux%u\n", cxClient, cyClient);
+      //  set minimum dimensions
+      ptTemp.x = cxClient ;  //  empirical value
+      ptTemp.y = cyClient ;  //  empirical value
+      lpTemp->ptMinTrackSize = ptTemp;
+      //  set maximum dimensions
+      ptTemp.x = cxClient ;
+      ptTemp.y = get_screen_height() ;
+      lpTemp->ptMaxTrackSize = ptTemp;
+      // lpTemp->ptMaxSize = ptTemp;
+      }         
+      return 0 ;
+
+   default:
+      break;
+   }
+   return 1 ;
+}
+
+
 //*******************************************************************
 // typedef struct winproc_table_s {
 //    uint win_code ;
@@ -480,6 +636,8 @@ static winproc_table_t const winproc_table[] = {
 { WM_COMMAND,        do_command },
 // { WM_COMM_TASK_DONE, do_comm_task_done },
 { WM_NOTIFY,         do_notify },
+// { WM_SIZING,         do_sizing },
+{ WM_GETMINMAXINFO,  do_getminmaxinfo },
 { WM_CLOSE,          do_close },
 { WM_DESTROY,        do_destroy },
 

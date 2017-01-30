@@ -24,7 +24,7 @@ der_libs/winmsgs.cpp \
 der_libs/vlistview.cpp 
 
 # add application files
-CSRC+=wfontlist.cpp font_list.cpp getfontfile.cpp
+CSRC+=wfontlist.cpp font_list.cpp getfontfile.cpp system.cpp
 
 OBJS = $(CSRC:.cpp=.o) rc.o
 
@@ -67,7 +67,8 @@ der_libs/wthread.o: der_libs/wthread.h
 der_libs/vlistview.o: der_libs/common.h der_libs/commonw.h
 der_libs/vlistview.o: der_libs/vlistview.h
 wfontlist.o: resource.h der_libs/common.h der_libs/commonw.h
-wfontlist.o: der_libs/statbar.h der_libs/vlistview.h font_list.h
+wfontlist.o: der_libs/statbar.h der_libs/vlistview.h font_list.h system.h
 font_list.o: der_libs/common.h der_libs/commonw.h der_libs/vlistview.h
 font_list.o: font_list.h
 getfontfile.o: der_libs/common.h der_libs/commonw.h
+system.o: der_libs/common.h der_libs/commonw.h system.h
