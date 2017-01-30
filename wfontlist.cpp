@@ -287,13 +287,13 @@ static bool do_init_dialog(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam
    term_window_height = cyClient ;
    // Client area: 883x784
    // stTop=752, cyStatus=22
-   syslog("Client area: %ux%u\n", cxClient, cyClient);
+   /* syslog("Client area: %ux%u\n", cxClient, cyClient); */
 
    //****************************************************************
    //  create/configure status bar first
    //****************************************************************
    MainStatusBar = new CStatusBar(hwnd) ;
-   MainStatusBar->MoveToBottom(cxClient, cyClient) ;
+   MainStatusBar->MoveToBottom(term_window_width, term_window_height-1) ;
 
    //  re-position status-bar parts
    int sbparts[3];
@@ -308,10 +308,9 @@ static bool do_init_dialog(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam
    {
    // uint lvy0 = 55 ;  //  bottom of other controls
    uint lvy0 = get_terminal_top();
-   // uint fudge_factor = 75 ;
    uint fudge_factor = 0 ;
-   uint lvdy = cyClient - lvy0 - MainStatusBar->height() - fudge_factor ;
-   VListView = new CVListView(hwnd, IDC_TERMINAL, g_hinst, 0, lvy0, cxClient-7, lvdy,
+   uint lvdy = term_window_height - fudge_factor - get_terminal_top() - MainStatusBar->height() ;   //lint !e737
+   VListView = new CVListView(hwnd, IDC_TERMINAL, g_hinst, 0, lvy0, cxClient-5, lvdy,
          LVL_STY_VIRTUAL | LVL_STY_EX_GRIDLINES);
    VListView->set_listview_font("Times New Roman", 140, 0) ;
    VListView->lview_assign_column_headers(&my_lv_cols[0], (LPARAM) 0) ;
@@ -511,10 +510,13 @@ static bool do_destroy(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam, LP
 //  WM_SIZING is generated every pixel or two of movement; we *wont* want to be resizing
 //  the entire dialog that frequently!!  We need to somehow slow this down a bit...
 //********************************************************************************************
+// #define  TERM_INIT_XOFFSET  1
+// #define  TERM_INIT_YOFFSET  1
+
 static void resize_font_dialog(bool resize_on_drag)
 {
    RECT myRect ;
-   int dx_offset, dy_offset ;
+   int dx_offset = 5, dy_offset = 0;
    // syslog("resize terminal, drag=%s\n", (resize_on_drag) ? "true" : "false") ;
 
    uint new_window_width, new_window_height ;
@@ -524,18 +526,17 @@ static void resize_font_dialog(bool resize_on_drag)
       new_window_width  = (uint) (myRect.right - myRect.left) ;
       new_window_height = (uint) (myRect.bottom - myRect.top) ;
 
-      if (term_window_width  == new_window_width  &&
-          term_window_height == new_window_height)
+      if (term_window_height == new_window_height)
           return ;
 
       // dx_offset = 6 ;
       // dy_offset = 5 ;
       // CPortTabControl->resize_window(new_window_width-dx_offset, new_window_height-dy_offset) ;
-      term_window_width  = new_window_width  ;
+      // term_window_width  = new_window_width  ;
       term_window_height = new_window_height ;
 
       // change_terminal_pixels(term_window_width, term_window_height) ;
-      dx_offset =  3 ;
+      // dx_offset =  3 ;
       dy_offset =  4 ;
       if (!are_normal_fonts_active()) {
          // syslog("acting on large fonts\n") ;
@@ -555,13 +556,14 @@ static void resize_font_dialog(bool resize_on_drag)
    //    }
    // }
 
+   MainStatusBar->MoveToBottom(term_window_width, term_window_height-1) ;
    //  resize the terminal (cols)
    int dxi = term_window_width  - dx_offset ;   //lint !e737
-   int dyi = term_window_height - dy_offset - get_terminal_top() ;   //lint !e737
+   int dyi   = term_window_height - dy_offset - get_terminal_top() - MainStatusBar->height() ;   //lint !e737
    // VListView->resize_terminal_pixels(dxi, dyi) ;
    VListView->resize(dxi, dyi); //  dialog is actually drawn a few pixels too small for text
    // set_terminal_dimens() ;  //  do this *after* resize()
-   VListView->resize_column(dxi-25) ; //  make this narrower than new_dx, to allow for scroll bar
+//   VListView->resize_column(dxi-25) ; //  make this narrower than new_dx, to allow for scroll bar
    // set_terminal_sizing(true);
    // if (resize_on_drag) {
    //    save_cfg_file() ;
@@ -607,11 +609,11 @@ static bool do_getminmaxinfo(HWND hwnd, UINT message, WPARAM wParam, LPARAM lPar
       POINT        ptTemp;
       // syslog("set minimum to %ux%u\n", cxClient, cyClient);
       //  set minimum dimensions
-      ptTemp.x = cxClient + 11;  //  empirical value
-      ptTemp.y = cyClient ;  //  empirical value
+      ptTemp.x = term_window_width + 11;  //  empirical value
+      ptTemp.y = term_window_height ;  //  empirical value
       lpTemp->ptMinTrackSize = ptTemp;
       //  set maximum dimensions
-      ptTemp.x = cxClient + 11;
+      ptTemp.x = term_window_width + 11;
       ptTemp.y = get_screen_height() ;
       lpTemp->ptMaxTrackSize = ptTemp;
       // lpTemp->ptMaxSize = ptTemp;
@@ -636,7 +638,7 @@ static winproc_table_t const winproc_table[] = {
 { WM_COMMAND,        do_command },
 // { WM_COMM_TASK_DONE, do_comm_task_done },
 { WM_NOTIFY,         do_notify },
-// { WM_SIZING,         do_sizing },
+{ WM_SIZING,         do_sizing },
 { WM_GETMINMAXINFO,  do_getminmaxinfo },
 { WM_CLOSE,          do_close },
 { WM_DESTROY,        do_destroy },
