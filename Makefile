@@ -41,7 +41,7 @@ clean:
 	rm -f *.exe *.zip *.bak $(OBJS) 
 
 lint:
-	cmd /C "c:\lint9\lint-nt +v -width(160,4) -ic:\lint9 -i../der_libs -dUNICODE -d_UNICODE mingw.lnt -os(_lint.tmp) lintdefs.cpp $(CSRC)"
+	cmd /C "c:\lint9\lint-nt +v -width(160,4) -ic:\lint9 -ider_libs -dUNICODE -d_UNICODE mingw.lnt -os(_lint.tmp) lintdefs.cpp $(CSRC)"
 
 source:
 	zip -D wfontlist.zip *
