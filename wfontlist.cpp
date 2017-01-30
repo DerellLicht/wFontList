@@ -33,7 +33,6 @@ static char szClassName[] = "WFontList" ;
 #include "statbar.h"
 #include "vlistview.h"
 #include "font_list.h"
-#include "system.h"
 
 //  getfontfile.cpp
 extern void get_font_path(void);
