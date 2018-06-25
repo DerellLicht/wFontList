@@ -43,9 +43,9 @@ clean:
 lint:
 	cmd /C "c:\lint9\lint-nt +v -width(160,4) -ic:\lint9 -ider_libs -dUNICODE -d_UNICODE mingw.lnt -os(_lint.tmp) lintdefs.cpp $(CSRC)"
 
-source:
-	zip -D wfontlist.zip *
-	zip -r wfontlist.zip ../der_libs/*
+dist:
+	rm -f wfontlist.zip
+	zip wfontlist.zip wfontlist.exe readme.md
 
 depend:
 	makedepend $(CFLAGS) $(CSRC)
