@@ -1,17 +1,15 @@
 //***********************************************************************
-//  Sample code from MSDN
+//  Sample code from MSDN - virtual listview control
 //***********************************************************************
 
+// Info 1704: Constructor 'CFontList::CFontList(const CFontList &)' has private access specification
 // Info 1719: assignment operator for class 'CFontList' has non-reference parameter
 // Info 1720: assignment operator for class 'CFontList' has non-const parameter
 // Info 1722: assignment operator for class 'CFontList' does not return a reference to class
-// Info 1712: default constructor not defined for class 'CFontList'
-// Info 1704: Constructor 'CFontList::CFontList(const CFontList &)' has private access specification
-//lint -esym(1712, CFontList)
+//lint -esym(1704, CFontList::CFontList)
 //lint -esym(1719, CFontList)
 //lint -esym(1720, CFontList)
 //lint -esym(1722, CFontList)
-//lint -esym(1704, CFontList::CFontList)
 typedef struct font_list_s {
    struct font_list_s *next ;
    TCHAR name[LF_FULLFACESIZE] ;
@@ -30,6 +28,11 @@ private:
    font_list_p font_tail ;
    unsigned font_count ;
    uint max_font_len ;
+
+   //  disable default constructor
+   CFontList() ;
+   
+   //  disable assignment and copy operators
    CFontList operator=(const CFontList src) ;
    CFontList(const CFontList&);
 
@@ -46,7 +49,9 @@ public:
    void sort_font_list(void);
    void delete_font_list(void);
    font_list_p find_font_element(uint target_idx);
-   uint get_font_count(void);
+   uint get_font_count(void) const {
+         return font_count ;
+      }
    void mark_element(uint idx);
    void clear_marked_elements(void);
 } ;

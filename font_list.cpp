@@ -1,5 +1,5 @@
 //***********************************************************************
-//  Sample code from MSDN
+//  Sample code from MSDN - virtual listview control
 // 
 //  compile with:  g++ -Wall -s -O3 flist.cpp -o flist.exe -lgdi32
 //***********************************************************************
@@ -54,17 +54,6 @@ CFontList::~CFontList()
    }
 }
 
-//***********************************************************************
-//  I'm going to skip this warning for now, because I don't know
-//  what the ramifications of making a member function const are...
-// Member function 'CFontList::get_font_count(void)' could be made const
-//lint -esym(1762, CFontList::get_font_count) 
-
-uint CFontList::get_font_count(void)
-{
-   return font_count ;
-}
-
 //****************************************************************************
 void CFontList::mark_element(uint idx)
 {
@@ -83,7 +72,6 @@ void CFontList::mark_element(uint idx)
 void CFontList::clear_marked_elements(void)
 {
    font_list_p rptr ;
-   // for (term_lview_item_p lvptr = tlv_top; lvptr != NULL; lvptr = lvptr->next) {
    for (rptr = font_list; rptr != NULL; rptr = rptr->next) {
       rptr->marked = false ;
    }
