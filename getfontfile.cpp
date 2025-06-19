@@ -20,11 +20,13 @@
 
 #include <windows.h>
 #include <tchar.h>
-#include <limits.h>
 #include <shlobj.h>
 
 #include "common.h"
 #include "commonw.h"
+
+//  eventually, this should end up in common.h
+#define  MAX_PATH_LEN   1024
 
 //  wfontlist.cpp
 extern void redraw_font_list(void);
@@ -32,7 +34,7 @@ extern void redraw_font_list(void);
 // #define MAX_KEY_LENGTH 255
 #define MAX_VALUE_NAME 16383
 
-static TCHAR system_font_path[PATH_MAX] ;
+static TCHAR system_font_path[MAX_PATH_LEN] ;
 
 //*******************************************************************
 void get_font_path(void)
@@ -41,16 +43,16 @@ void get_font_path(void)
    // int result = 
    SHGetFolderPath(NULL, CSIDL_FONTS, NULL, 0, system_font_path) ;
    // if (result == S_OK) {
-   //    syslogW(_T("font path=[%s]\n"), system_font_path) ;
+   //    syslog(_T("font path=[%s]\n"), system_font_path) ;
    // } else {
-   //    syslogW(_T("SHGetFolderPath: something went wrong\n")) ;
+   //    syslog(_T("SHGetFolderPath: something went wrong\n")) ;
    // }
 }
 
 //*******************************************************************
 // user app path=[C:\Users\derelict\AppData\Roaming]
 //*******************************************************************
-// static TCHAR user_home_path[PATH_MAX] ;
+// static TCHAR user_home_path[MAX_PATH_LEN] ;
 
 // void get_user_app_path(void)
 // {
@@ -58,9 +60,9 @@ void get_font_path(void)
 //    // int result = 
 //    SHGetFolderPath(NULL, CSIDL_APPDATA, NULL, 0, user_home_path) ;
 //    // if (result == S_OK) {
-//       syslogW(_T("user app path=[%s]\n"), user_home_path) ;
+//       syslog(_T("user app path=[%s]\n"), user_home_path) ;
 //    // } else {
-//    //    syslogW(_T("SHGetFolderPath: something went wrong\n")) ;
+//    //    syslog(_T("SHGetFolderPath: something went wrong\n")) ;
 //    // }
 // }
 
@@ -123,7 +125,7 @@ static void QueryKey (HKEY hKey, LPCTSTR lpszFontName)
    if (cValues) {
       // Number of values: 497, seeking Almagro Regular
       if (operating_mode == 1) {
-         syslogW(_T("Number of values: %d, seeking %s\n"), cValues, lpszFontName);
+         syslog(_T("Number of values: %d, seeking %s\n"), cValues, lpszFontName);
       }
 
       // char szValueName[MAX_PATH];
@@ -132,7 +134,7 @@ static void QueryKey (HKEY hKey, LPCTSTR lpszFontName)
       DWORD dwValueDataSize = sizeof(szValueData)-1;
       DWORD dwType = 0;
 
-      TCHAR font_file_name[PATH_MAX];
+      TCHAR font_file_name[MAX_PATH_LEN];
       uint removed_elements = 0 ;
       retCode = ERROR_SUCCESS ;  //  not really needed
       for (i = 0; i < cValues; i++) {
@@ -145,11 +147,11 @@ static void QueryKey (HKEY hKey, LPCTSTR lpszFontName)
          if (retCode == ERROR_SUCCESS) {
             if (operating_mode == 1) {
                // (351) value=Native  Normal (TrueType), data=nativ__r.ttf
-               syslogW(_T("(%d) value=%s, data=%s\n"), i + 1, achValue, (char *)szValueData);
+               syslog(_T("(%d) value=%s, data=%s\n"), i + 1, achValue, (char *)szValueData);
             }
 
             if (_tcsstr(achValue, lpszFontName) != NULL  &&  system_font_path[0] != 0) {
-               TCHAR szData[PATH_MAX] ;
+               TCHAR szData[MAX_PATH_LEN] ;
                lstrcpy(szData, (TCHAR *)szValueData);
                
                //  RemoveFontResource() requires that filename be fully-qualified path
@@ -159,21 +161,21 @@ static void QueryKey (HKEY hKey, LPCTSTR lpszFontName)
                   removed_elements++ ;
                   // [4892] removing C:\Windows\Fonts\abbey_me.TTF
                   if (RemoveFontResource(font_file_name)) {
-                     syslogW(_T("%s removed\n"), font_file_name) ;
+                     syslog(_T("%s removed\n"), font_file_name) ;
                      //  Again, I am using SendNotifyMessage because SendMessage caused the code to hang.
                      SendMessage(HWND_BROADCAST, WM_FONTCHANGE, (WPARAM) 0, (LPARAM) 0);
                      // SendNotifyMessage(HWND_BROADCAST, WM_FONTCHANGE, NULL, NULL);
                      // _unlink(CompleteLocalPath.c_str());
                      // return kSuccess;
                   } else {
-                     syslog("%s: %s\n", font_file_name, get_system_message()) ;
+                     syslog(_T("%s: %s\n"), font_file_name, get_system_message()) ;
                   }
                } else {
-                  syslogW(_T("@@@  found (%d) value=%s, data=%s\n"), i + 1, achValue, (char *)szValueData);
+                  syslog(_T("@@@  found (%d) value=%s, data=%s\n"), i + 1, achValue, (char *)szValueData);
                }
             }
          } else {
-            syslog("### (%d) [%u] %s\n", i + 1, (uint) retCode, get_system_message(retCode));
+            syslog(_T("### (%d) [%u] %s\n"), i + 1, (uint) retCode, get_system_message(retCode));
          }
       }
       //  if any fonts were deleted, redraw the font list
@@ -181,11 +183,11 @@ static void QueryKey (HKEY hKey, LPCTSTR lpszFontName)
          redraw_font_list() ;
       } else {
          if (operating_mode == 0) 
-            syslogW(_T("cannot match %s\n"), lpszFontName);
+            syslog(_T("cannot match %s\n"), lpszFontName);
       }
    }
    else
-      syslog("No values to be enumerated!\n");
+      syslog(_T("No values to be enumerated!\n"));
 }
 
 //********************************************************************************
@@ -198,10 +200,10 @@ static bool enum_registry(HKEY key, TCHAR *path, LPCTSTR lpszFontName)
    // if(RegOpenKeyEx(HKEY_LOCAL_MACHINE, _T("SYSTEM\\Setup") /*L"S-1-5-18"*/,  
    // if (RegOpenKeyEx (HKEY_LOCAL_MACHINE, strFont,
    if (RegOpenKeyEx (key, path, 0, KEY_READ, &hTestKey) != ERROR_SUCCESS) {
-      syslog("RegOpenKeyEx() failed!\n");
+      syslog(_T("RegOpenKeyEx() failed!\n"));
       return false;
    }
-   // syslogW(_T("opened Registry key %s\n"), path);
+   // syslog(_T("opened Registry key %s\n"), path);
    QueryKey (hTestKey, lpszFontName);
    RegCloseKey (hTestKey);
    return true;

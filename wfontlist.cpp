@@ -4,8 +4,8 @@
 //  
 //  Written by:   Daniel D. Miller
 //**********************************************************************
-//  version		changes
-//	 =======		======================================
+//  version    changes
+//  =======    ======================================
 //    1.00     original, derived from winagrams.cpp
 //    1.01     Remove winmsgs.cpp from common_funcs.cpp
 //    1.02     Convert various modules into classes
@@ -54,7 +54,7 @@ static uint current_cursor = 0 ;
 //    void (*renderFunc)(void *private_data, uint curr_rows, uint iSubItem) ;
 // } lv_cols_t, *lv_cols_p ;
 //  headers for the main listview control
-static lv_cols_t my_lv_cols[] = {
+static lv_cols_s my_lv_cols[] = {
 { _T("Font Name"), 520, false, 0, false, NULL },
 { _T("Charset"),   100, false, 0, false, NULL },
 { _T("Pitch"),     110, false, 0, false, NULL },
@@ -120,7 +120,7 @@ static HFONT get_font_pointer(uint item_num)
    // syslog("clicked on element %d\n", index) ;
    font_list_p fptr = FontList->find_font_element((uint) item_num) ;
    if (fptr == NULL) {
-      syslog("get_font: cannot find item %u\n", item_num) ;
+      syslog(_T("get_font: cannot find item %u\n"), item_num) ;
       return 0;
    } else {
       // wsprintf(msgstr, "L%u: %s", (uint) index, fptr->name) ;
@@ -145,7 +145,7 @@ static void vlview_single_click(LPARAM lParam)
          // font_list_p fptr = FontList->find_font_element((uint) index) ;
          font_list_p fptr = FontList->find_font_element((uint) index) ;
          if (fptr == NULL) {
-            syslog("cannot find item %u\n", index) ;
+            syslog(_T("cannot find item %u\n"), index) ;
          } else {
             current_cursor = index ;
             wsprintf(msgstr, _T("L%u: %s"), (uint) index, fptr->name) ;
@@ -175,7 +175,7 @@ static void vlview_get_terminal_entry(LPARAM lParam)
    // snmp_request_p snmp_req = lvptr->snmp_entry ;
    font_list_p fptr = FontList->find_font_element((uint) lpdi->item.iItem) ;
    if (fptr == NULL) {
-      syslog("cannot find item %u, sub-item %u\n", lpdi->item.iItem, lpdi->item.iSubItem) ;
+      syslog(_T("cannot find item %u, sub-item %u\n"), lpdi->item.iItem, lpdi->item.iSubItem) ;
       return ;
    }
    // syslog("plotting item %u, sub-item %u\n", lpdi->item.iItem, lpdi->item.iSubItem) ;
@@ -266,7 +266,7 @@ static LRESULT ProcessCustomDraw(LPARAM lParam)
       }
 
    default:
-      syslog("Unknown CDDS code %d\n", lplvcd->nmcd.dwDrawStage) ;
+      syslog(_T("Unknown CDDS code %d\n"), lplvcd->nmcd.dwDrawStage) ;
       break;
    }
    return CDRF_DODEFAULT;
@@ -319,7 +319,7 @@ static bool do_init_dialog(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam
    uint lvdy = term_window_height - fudge_factor - get_terminal_top() - MainStatusBar->height() ;   //lint !e737
    VListView = new CVListView(hwnd, IDC_TERMINAL, g_hinst, 0, lvy0, cxClient-5, lvdy,
          LVL_STY_VIRTUAL | LVL_STY_EX_GRIDLINES);
-   VListView->set_listview_font("Times New Roman", 140, 0) ;
+   VListView->set_listview_font(_T("Times New Roman"), 140, 0) ;
    VListView->lview_assign_column_headers(&my_lv_cols[0], (LPARAM) 0) ;
    }
 
@@ -349,7 +349,7 @@ static int enum_selected_rows(void)
 
       font_list_p fptr = FontList->find_font_element((uint) nCurItem) ;
       if (fptr == NULL) {
-         syslog("cannot find item %u\n", nCurItem) ;
+         syslog(_T("cannot find item %u\n"), nCurItem) ;
       } else {
          GetFontFile(fptr->name) ;
       }
@@ -401,7 +401,7 @@ static bool do_command(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam, LP
          return true;
 
       case IDM_ENUM_FONTS:
-         syslogW(_T("enumerating fonts\n"));
+         syslog(_T("enumerating fonts\n"));
          operating_mode = 1 ;
          enum_selected_rows();
          return true;
@@ -682,7 +682,7 @@ int APIENTRY WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance,
                   LPSTR szCmdLine, int iCmdShow)   
 {
    if (!WeAreAlone (szClassName)) {
-      syslog("wFontList is already running!!\n") ;
+      syslog(_T("wFontList is already running!!\n")) ;
       return 0;
    }
 
@@ -694,7 +694,7 @@ int APIENTRY WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance,
    HWND hwnd = CreateDialog(hInstance, MAKEINTRESOURCE(IDD_MAIN_DIALOG), NULL, (DLGPROC) WndProc);
    if (hwnd == NULL) {
       // Notified your about the failure
-      syslog("CreateDialog (main): %s [%u]\n", get_system_message(), GetLastError()) ;
+      syslog(_T("CreateDialog (main): %s [%u]\n"), get_system_message(), GetLastError()) ;
       // Set the return value
       return FALSE;
    }
