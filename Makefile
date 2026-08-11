@@ -1,63 +1,104 @@
-SHELL=cmd.exe
+# SHELL=cmd.exe
 USE_DEBUG = NO
+USE_UNICODE = YES
+USE_CLANG = YES
+
+include der_libs\tool_select.mak
 
 ifeq ($(USE_DEBUG),YES)
-CFLAGS=-Wall -O -g
-LFLAGS=
+CFLAGS=-Wall -O -g -c
+LFLAGS= -mwindows
 else
-CFLAGS=-Wall -O3
-LFLAGS=-s
+CFLAGS=-Wall -O3 -c
+LFLAGS=-s -mwindows
 endif
 
-# FIX "This app has failed to start because libgcc_s_dw2-1.dll was not found."
-# CFLAGS += -static-libgcc -static-libstdc++
+ifeq ($(USE_UNICODE),YES)
+CFLAGS += -DUNICODE -D_UNICODE
+endif
+
 CFLAGS += -Wno-write-strings
 CFLAGS += -Weffc++
-CFLAGS += -DUNICODE -D_UNICODE
+
+# this flag resolves errors from WM_NOTIFY messages, 
+# which are signed-int values camouflaged as uint32_t values
+ifeq ($(USE_CLANG),YES)
+CFLAGS += -Wno-c++11-narrowing
+endif
+
+ifeq ($(USE_STATIC),YES)
+LFLAGS += -static
+endif
+
+# This is required for *some* versions of makedepend
+IFLAGS += -DNOMAKEDEPEND
 
 # link library files
 CFLAGS += -Ider_libs
-CSRC=der_libs/common_funcs.cpp \
+
+# add application files
+CAPPSRC=wfontlist.cpp font_list.cpp getfontfile.cpp
+
+CLIBSRC=der_libs/common_funcs.cpp \
 der_libs/common_win.cpp \
 der_libs/statbar.cpp \
 der_libs/wthread.cpp \
 der_libs/winmsgs.cpp \
 der_libs/vlistview.cpp 
 
-# add application files
-CSRC+=wfontlist.cpp font_list.cpp getfontfile.cpp
+CSRC = $(CAPPSRC) $(CLIBSRC)
 
 OBJS = $(CSRC:.cpp=.o) rc.o
 
-BIN=wfontlist.exe
+BIN=wfontlist
+BINS=$(BIN).exe
+
+LIBS = -lcomctl32
 
 #************************************************************
 %.o: %.cpp
-	g++ $(CFLAGS) -c $< -o $@
+	$(TOOLS)/$(GNAME) $(CFLAGS) $< -o $@
 
-all: $(BIN)
+all: $(BINS)
 
 clean:
 	rm -f *.exe *.zip *.bak $(OBJS) 
 
-lint:
-	cmd /C "c:\lint9\lint-nt +v -width(160,4) -ic:\lint9 -ider_libs -dUNICODE -d_UNICODE mingw.lnt -os(_lint.tmp) lintdefs.cpp $(CSRC)"
+wc:
+	wc -l $(CSRC) *.rc
+	
+ctidy_all:
+	cmd /C "clang-tidy $(CSRC) -- $(CFLAGS) 2>&1 | grep -oP '\[\K[a-z][a-z0-9-]+(?=\]$$)' | sort | uniq -c | sort -rn"
+
+ctidy_local:
+	cmd /C "clang-tidy $(CAPPSRC) -- $(CFLAGS) 2>&1 | grep -oP '\[\K[a-z][a-z0-9-]+(?=\]$$)' | sort | uniq -c | sort -rn"
+
+ctidy_libs:
+	cmd /C "clang-tidy $(CLIBSRC) -- $(CFLAGS) 2>&1 | grep -oP '\[\K[a-z][a-z0-9-]+(?=\]$$)' | sort | uniq -c | sort -rn"
+
+clint:
+	cmd /C "python ..\ClaudeLint.py --exclude der_libs"
+	
+cppc:
+	cmd /C "cppcheck --project=compile_commands.json --std=c++14 --suppressions-list=./.suppress.cppcheck"
+
+check:
+	cmd /C "d:\llvm\bin\clang-tidy.exe $(CSRC) -- $(CFLAGS) "
 
 dist:
-	rm -f wfontlist.zip
-	zip wfontlist.zip wfontlist.exe readme.md
+	rm -f $(BIN).zip
+	zip $(BIN).zip $(BINS) readme.md
 
 depend:
 	makedepend $(CFLAGS) $(CSRC)
 
 #************************************************************
 
-$(BIN): $(OBJS)
-	g++ $(CFLAGS) -mwindows -s $(OBJS) -o $@ -lcomctl32
-#	cmd /C "\\InnoSetup5\iscc" /Q wFontList.iss
+$(BINS): $(OBJS)
+	$(TOOLS)/$(GNAME) $(OBJS) $(LFLAGS) -o $(BINS) $(LIBS) 
 
 rc.o: wfontlist.rc 
-	windres $< -O coff -o $@
+	$(TOOLS)\$(WRNAME) $< -O COFF -o $@
 
 # DO NOT DELETE
 

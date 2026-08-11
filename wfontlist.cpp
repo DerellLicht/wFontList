@@ -227,7 +227,8 @@ static LRESULT ProcessCustomDraw(LPARAM lParam)
    HFONT hfontCurr ;
 
    switch (lplvcd->nmcd.dwDrawStage) {
-   case CDDS_PREPAINT:       //Before the paint cycle begins
+   //  Before the paint cycle begins
+   case CDDS_PREPAINT:  //  NOLINT(bugprone-branch-clone)
       // syslog("CDDS_PREPAINT\n") ;
       //request notifications for individual listview items
       return CDRF_NOTIFYITEMDRAW;

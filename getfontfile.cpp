@@ -102,6 +102,11 @@ static void QueryKey (HKEY hKey, LPCTSTR lpszFontName)
       &cbMaxValueData,          // longest value data
       &cbSecurityDescriptor,    // security descriptor
       &ftLastWriteTime);        // last write time
+      
+   if (retCode != ERROR_SUCCESS) {
+      syslog(L"RegQueryInfoKey (L%u) failed\n", __LINE__);
+      return ;
+   }
 
    // wprintf (L"RegQueryInfoKey() returns %u\n", retCode);
 
@@ -136,7 +141,7 @@ static void QueryKey (HKEY hKey, LPCTSTR lpszFontName)
 
       TCHAR font_file_name[MAX_PATH_LEN];
       uint removed_elements = 0 ;
-      retCode = ERROR_SUCCESS ;  //  not really needed
+      // retCode = ERROR_SUCCESS ;  //  not really needed
       for (i = 0; i < cValues; i++) {
          cchValue = MAX_VALUE_NAME;
          achValue[0] = '\0';

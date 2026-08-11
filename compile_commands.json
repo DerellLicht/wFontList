@@ -1,0 +1,173 @@
+[
+ {
+  "directory": "D:\\SourceCode\\Git\\wFontList",
+  "arguments": [
+   "D:/llvm/bin/i686-w64-mingw32-clang++",
+   "-Wall",
+   "-O3",
+   "-c",
+   "-DUNICODE",
+   "-D_UNICODE",
+   "-Wno-write-strings",
+   "-Weffc++",
+   "-Wno-c++11-narrowing",
+   "-Ider_libs",
+   "der_libs/common_funcs.cpp",
+   "-o",
+   "der_libs/common_funcs.o"
+  ],
+  "file": "der_libs/common_funcs.cpp"
+ },
+ {
+  "directory": "D:\\SourceCode\\Git\\wFontList",
+  "arguments": [
+   "D:/llvm/bin/i686-w64-mingw32-clang++",
+   "-Wall",
+   "-O3",
+   "-c",
+   "-DUNICODE",
+   "-D_UNICODE",
+   "-Wno-write-strings",
+   "-Weffc++",
+   "-Wno-c++11-narrowing",
+   "-Ider_libs",
+   "der_libs/common_win.cpp",
+   "-o",
+   "der_libs/common_win.o"
+  ],
+  "file": "der_libs/common_win.cpp"
+ },
+ {
+  "directory": "D:\\SourceCode\\Git\\wFontList",
+  "arguments": [
+   "D:/llvm/bin/i686-w64-mingw32-clang++",
+   "-Wall",
+   "-O3",
+   "-c",
+   "-DUNICODE",
+   "-D_UNICODE",
+   "-Wno-write-strings",
+   "-Weffc++",
+   "-Wno-c++11-narrowing",
+   "-Ider_libs",
+   "der_libs/statbar.cpp",
+   "-o",
+   "der_libs/statbar.o"
+  ],
+  "file": "der_libs/statbar.cpp"
+ },
+ {
+  "directory": "D:\\SourceCode\\Git\\wFontList",
+  "arguments": [
+   "D:/llvm/bin/i686-w64-mingw32-clang++",
+   "-Wall",
+   "-O3",
+   "-c",
+   "-DUNICODE",
+   "-D_UNICODE",
+   "-Wno-write-strings",
+   "-Weffc++",
+   "-Wno-c++11-narrowing",
+   "-Ider_libs",
+   "der_libs/wthread.cpp",
+   "-o",
+   "der_libs/wthread.o"
+  ],
+  "file": "der_libs/wthread.cpp"
+ },
+ {
+  "directory": "D:\\SourceCode\\Git\\wFontList",
+  "arguments": [
+   "D:/llvm/bin/i686-w64-mingw32-clang++",
+   "-Wall",
+   "-O3",
+   "-c",
+   "-DUNICODE",
+   "-D_UNICODE",
+   "-Wno-write-strings",
+   "-Weffc++",
+   "-Wno-c++11-narrowing",
+   "-Ider_libs",
+   "der_libs/winmsgs.cpp",
+   "-o",
+   "der_libs/winmsgs.o"
+  ],
+  "file": "der_libs/winmsgs.cpp"
+ },
+ {
+  "directory": "D:\\SourceCode\\Git\\wFontList",
+  "arguments": [
+   "D:/llvm/bin/i686-w64-mingw32-clang++",
+   "-Wall",
+   "-O3",
+   "-c",
+   "-DUNICODE",
+   "-D_UNICODE",
+   "-Wno-write-strings",
+   "-Weffc++",
+   "-Wno-c++11-narrowing",
+   "-Ider_libs",
+   "der_libs/vlistview.cpp",
+   "-o",
+   "der_libs/vlistview.o"
+  ],
+  "file": "der_libs/vlistview.cpp"
+ },
+ {
+  "directory": "D:\\SourceCode\\Git\\wFontList",
+  "arguments": [
+   "D:/llvm/bin/i686-w64-mingw32-clang++",
+   "-Wall",
+   "-O3",
+   "-c",
+   "-DUNICODE",
+   "-D_UNICODE",
+   "-Wno-write-strings",
+   "-Weffc++",
+   "-Wno-c++11-narrowing",
+   "-Ider_libs",
+   "wfontlist.cpp",
+   "-o",
+   "wfontlist.o"
+  ],
+  "file": "wfontlist.cpp"
+ },
+ {
+  "directory": "D:\\SourceCode\\Git\\wFontList",
+  "arguments": [
+   "D:/llvm/bin/i686-w64-mingw32-clang++",
+   "-Wall",
+   "-O3",
+   "-c",
+   "-DUNICODE",
+   "-D_UNICODE",
+   "-Wno-write-strings",
+   "-Weffc++",
+   "-Wno-c++11-narrowing",
+   "-Ider_libs",
+   "font_list.cpp",
+   "-o",
+   "font_list.o"
+  ],
+  "file": "font_list.cpp"
+ },
+ {
+  "directory": "D:\\SourceCode\\Git\\wFontList",
+  "arguments": [
+   "D:/llvm/bin/i686-w64-mingw32-clang++",
+   "-Wall",
+   "-O3",
+   "-c",
+   "-DUNICODE",
+   "-D_UNICODE",
+   "-Wno-write-strings",
+   "-Weffc++",
+   "-Wno-c++11-narrowing",
+   "-Ider_libs",
+   "getfontfile.cpp",
+   "-o",
+   "getfontfile.o"
+  ],
+  "file": "getfontfile.cpp"
+ }
+]

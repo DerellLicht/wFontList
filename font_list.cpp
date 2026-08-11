@@ -243,7 +243,11 @@ void CFontList::add_font_to_list(TCHAR *facename, uint charset, u8 pitch, u8 fam
 int CALLBACK CFontList::EnumFontFamiliesExProc(ENUMLOGFONTEX *lpelfe, NEWTEXTMETRICEX *lpntme, 
                                     int FontType, LPARAM lParam )
 {
-   CFontList* pThis = (CFontList*)(void*)lParam;
+   // bugprone-casting-through-void: don't chain a C-style cast through void* — 
+   // if you're going to reinterpret unrelated types, 
+   // say so explicitly with reinterpret_cast.
+   // CFontList* pThis = (CFontList*)(void*)lParam;
+   auto *pThis = reinterpret_cast<CFontList*>(lParam) ;
 
    LOGFONT *lfptr = &lpelfe->elfLogFont ;
    // printf( "%s, charset=%u, paf=0x%x\n", lfptr->lfFaceName, lfptr->lfCharSet, lfptr->lfPitchAndFamily );
@@ -269,7 +273,8 @@ void CFontList::build_font_list(void)
       TEXT("")  //  lfFaceName
       };              
    // EnumFontFamiliesEx(hDC, &lf, (FONTENUMPROC) EnumFontFamiliesExProc, 0, 0 );
-   EnumFontFamiliesEx(hDC, &lf, reinterpret_cast<FONTENUMPROC>(EnumFontFamiliesExProc), (LPARAM) (void*) this, 0 );
+   // EnumFontFamiliesEx(hDC, &lf, reinterpret_cast<FONTENUMPROC>(EnumFontFamiliesExProc), (LPARAM) (void*) this, 0 );
+   EnumFontFamiliesEx(hDC, &lf, reinterpret_cast<FONTENUMPROC>(EnumFontFamiliesExProc), reinterpret_cast<LPARAM>(this), 0 );
 
    ReleaseDC( NULL, hDC );
 }
