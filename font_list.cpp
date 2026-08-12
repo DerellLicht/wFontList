@@ -7,6 +7,7 @@
 #include <windows.h>
 #include <tchar.h>
 
+// NOLINTBEGIN(cppcoreguidelines-owning-memory)
 #include "common.h"
 #include "commonw.h" //  build_font()
 #include "vlistview.h"
@@ -279,3 +280,4 @@ void CFontList::build_font_list(void)
    ReleaseDC( NULL, hDC );
 }
 
+// NOLINTEND(cppcoreguidelines-owning-memory)

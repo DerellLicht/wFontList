@@ -1,3 +1,5 @@
+- replace font_list linked list with <vector>
+
 - process the re-visitable fields in .clang-tidy,
   all of which are in der_libs
 

@@ -10,18 +10,6 @@
 # der_libs/common_funcs.cpp:292:10: warning: do not access members of unions; 
 #    consider using (boost::)variant instead 
 #    [cppcoreguidelines-pro-type-union-access]
-# der_libs/common_funcs.cpp:1068:4: warning: calling legacy resource function without 
-#    passing a 'gsl::owner<>' 
-#    [cppcoreguidelines-owning-memory]
-# der_libs/common_win.cpp:464:34: 
-#    warning: casting (double + 0.5) to integer leads to incorrect rounding; 
-#    consider using lround (#include <cmath>) instead 
-#    [bugprone-incorrect-roundings]
-# der_libs/wthread.cpp:24:4: 
-#    warning: 'thread_running' should be initialized in a member initializer of the constructor 
-#    [cppcoreguidelines-prefer-member-initializer]
-# der_libs/wthread.h:32:4: warning: function 'get_thread_ID' should be marked [[nodiscard]] 
-#    [modernize-use-nodiscard]
 
 Checks: >
   -*,
@@ -46,7 +34,6 @@ Checks: >
   -cppcoreguidelines-avoid-goto,
   -cppcoreguidelines-init-variables,
   -cppcoreguidelines-pro-type-union-access,
-  -cppcoreguidelines-owning-memory,
   -cppcoreguidelines-narrowing-conversions,
   -cppcoreguidelines-use-default-member-init,
   modernize-*,
