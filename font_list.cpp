@@ -19,8 +19,12 @@
 //*************************************************************************
 CFontList::CFontList(CVListView *VListView) :
    FontVListView(VListView),
-   font_list(NULL),
-   font_tail(NULL),
+#ifdef  USE_VECTOR
+   font_list {},
+#else
+   font_list (nullptr),
+   font_tail (nullptr),
+#endif   
    font_count(0),
    max_font_len(0)
 {
@@ -29,35 +33,50 @@ CFontList::CFontList(CVListView *VListView) :
 //*************************************************************************
 void CFontList::delete_font_list(void)
 {
+#ifdef  USE_VECTOR
+   font_list.clear() ;
+#else
    font_list_p fontptr = font_list;
    font_list = NULL ;
    font_tail = NULL ;
-   font_count = 0 ;
    max_font_len = 0 ;
    while (fontptr != NULL) {
       font_list_p fontkill = fontptr;
       fontptr = fontptr->next ;
       delete fontkill ;
    }
+#endif   
+   font_count = 0 ;
 }
 
 //*************************************************************************
 CFontList::~CFontList()
 {
+#ifdef  USE_VECTOR
+   font_list.clear() ;
+#else
    font_list_p fontptr = font_list;
    font_list = NULL ;
    font_tail = NULL ;
-   font_count = 0 ;
    while (fontptr != NULL) {
       font_list_p fontkill = fontptr;
       fontptr = fontptr->next ;
       delete fontkill ;
    }
+#endif   
+   font_count = 0 ;
 }
 
 //****************************************************************************
 void CFontList::mark_element(uint idx)
 {
+#ifdef  USE_VECTOR
+   if (idx >= font_list.size()) {
+      return ;
+   }
+   font_list_p rptr = &font_list[idx];  //  NOLINT(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
+   rptr->marked = true ;
+#else
    font_list_p rptr ;
    // for (term_lview_item_p lvptr = tlv_top; lvptr != NULL; lvptr = lvptr->next) {
    uint list_idx = 0 ;
@@ -67,20 +86,34 @@ void CFontList::mark_element(uint idx)
          break;
       }
    }
+#endif
 }
 
 //****************************************************************************
 void CFontList::clear_marked_elements(void)
 {
+#ifdef  USE_VECTOR
+   for(auto &fptr : font_list) {
+      fptr.marked = false ;
+   }
+#else
    font_list_p rptr ;
    for (rptr = font_list; rptr != NULL; rptr = rptr->next) {
       rptr->marked = false ;
    }
+#endif   
 }
 
 //*************************************************************************
 font_list_p CFontList::find_font_element(uint target_idx)
 {
+#ifdef  USE_VECTOR
+   if (target_idx >= font_list.size()) {
+      return nullptr ;
+   }
+   font_list_p rptr = &font_list[target_idx];  //  NOLINT(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
+   return rptr ;
+#else
    font_list_p rptr ;
    uint idx = 0 ;
    for (rptr = font_list; rptr != NULL; rptr = rptr->next, idx++) {
@@ -88,14 +121,26 @@ font_list_p CFontList::find_font_element(uint target_idx)
          return rptr;
    }
    return NULL;
+#endif   
 }
 
+#ifdef  USE_VECTOR
+//*********************************************************
+static bool const sort_name (font_list_s const &a, font_list_s const &b)
+{
+   return (_tcsicmp (a.name, b.name) < 0) ;
+}
+
+#else
 //*********************************************************
 static int sort_name(font_list_p a, font_list_p b)
 {
    return(_tcsicmp(a->name, b->name)) ;
 }
+#endif
 
+//*********************************************************
+#ifndef  USE_VECTOR
 //*********************************************************
 static font_list_p z = NULL ;
 
@@ -157,6 +202,7 @@ static font_list_p merge_sort(font_list_p c)
    }
    return c ;
 }
+#endif
 
 //*********************************************************
 //  This intermediate function is used because I want
@@ -168,6 +214,9 @@ static font_list_p merge_sort(font_list_p c)
 //*********************************************************
 void CFontList::sort_font_list(void)
 {
+#ifdef  USE_VECTOR
+   std::sort(font_list.begin(), font_list.end(), sort_name);
+#else
    if (z == 0) {
       // z = new ffdata ;
       // z = (struct ffdata *) malloc(sizeof(ffdata)) ;
@@ -177,17 +226,25 @@ void CFontList::sort_font_list(void)
       memset((char *) z, 0, sizeof(font_list_t)) ;
    }
    font_list = merge_sort(font_list) ;
+#endif   
 }
 
 //***********************************************************************
-unsigned CFontList::check_for_dupe(TCHAR *face_name)
+bool CFontList::check_for_dupe(TCHAR *face_name)
 {
+#ifdef  USE_VECTOR
+   for(auto &fptr : font_list) {
+      if (_tcscmp(face_name, fptr.name) == 0)
+         return true;
+   }
+#else
    font_list_p fptr ;
    for (fptr=font_list; fptr != 0; fptr = fptr->next) {
       if (_tcscmp(face_name, fptr->name) == 0)
-         return 1;
+         return true;
    }
-   return 0;
+#endif   
+   return false;
 }
 
 //***********************************************************************
@@ -195,12 +252,16 @@ unsigned CFontList::check_for_dupe(TCHAR *face_name)
 //***********************************************************************
 void CFontList::add_font_to_list(TCHAR *facename, uint charset, u8 pitch, u8 family)
 {
-   if (check_for_dupe(facename) != 0)
+   if (check_for_dupe(facename))
       return ;
+      
+#ifdef  USE_VECTOR
+   font_list_p fptr = &font_list.emplace_back();
+   // font_list_p fptr = &font_list.back();
+#else      
    font_list_p fptr = new font_list_t ;
-   // if (fptr == 0) //  supposedly superfluous in C++
-   //    return ;
    ZeroMemory((char *) fptr, sizeof(font_list_t)) ;
+#endif   
    uint slen = _tcslen(facename) ;
    if (max_font_len < slen)
        max_font_len = slen ;
@@ -210,12 +271,14 @@ void CFontList::add_font_to_list(TCHAR *facename, uint charset, u8 pitch, u8 fam
    fptr->family = family ;
    fptr->hfont = build_font(fptr->name, 20, EZ_ATTR_NORMAL) ;
 
+#ifndef  USE_VECTOR
    //  add new entry to list
    if (font_list == 0)
       font_list = fptr ;
    else
       font_tail->next = fptr ;
    font_tail = fptr ;
+#endif   
 
    FontVListView->listview_update(font_count);
    font_count++ ;
