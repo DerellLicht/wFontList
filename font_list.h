@@ -1,18 +1,11 @@
 //***********************************************************************
 //  Sample code from MSDN - virtual listview control
 //***********************************************************************
-#define  USE_VECTOR
-// #undef  USE_VECTOR
 
-#ifdef  USE_VECTOR
 #include <vector>
-#endif
 
 //***********************************************************************
 struct font_list_s {
-#ifndef  USE_VECTOR
-   struct font_list_s *next ;
-#endif   
    TCHAR name[LF_FULLFACESIZE] ;
    uint charset ;
    u8 pitch ;
@@ -21,22 +14,13 @@ struct font_list_s {
    bool marked ;
 } ;
 
-#ifndef  USE_VECTOR
-typedef struct font_list_s font_list_t ;
-#endif   
-
 typedef struct font_list_s *font_list_p ;
 
 //***********************************************************************
 class CFontList {
 private:
    CVListView *FontVListView ;
-#ifdef  USE_VECTOR
    std::vector<font_list_s> font_list ;
-#else
-   font_list_p font_list ;
-   font_list_p font_tail ;
-#endif   
    unsigned font_count ;   //  in vector, this will be replaced by font_list.size()
    uint max_font_len ;
 

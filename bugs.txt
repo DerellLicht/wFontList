@@ -1,4 +1,6 @@
 - window resize doesn't entirely work...
   down works, but up only parially works.
   width change works to a certain degree, but it shouldn't change at all.
+
+It turns out that the width-management quirks are caused by Windowblinds.
     

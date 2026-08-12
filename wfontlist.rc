@@ -1,5 +1,5 @@
 //****************************************************************************
-//  Copyright (c) 2010-2012  Daniel D Miller
+//  Copyright (c) 2010-2026  Daniel D Miller
 //  wfontlist.exe - a Win32 font-listing program
 //
 //  Written/integrated by:  Dan Miller
@@ -27,6 +27,11 @@
 
 #include "resource.h"
 
+// DPI-awareness / execution-level manifest. 
+// Numeric form (1 = CREATEPROCESS_MANIFEST_RESOURCE_ID, 24 = RT_MANIFEST) 
+// rather than the named macros, for compatibility across rc compilers.
+1 24 "wfontlist.manifest"
+
 IDI_APPICON   ICON      "fonts2.ico"
 
 #define	 MAIN_DX	    500
@@ -37,6 +42,7 @@ IDD_MAIN_DIALOG DIALOGEX 200, 50, MAIN_DX, 400
 // STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX
 // EXSTYLE WS_EX_APPWINDOW
 STYLE DS_MODALFRAME | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME | WS_MINIMIZEBOX
+// STYLE DS_MODALFRAME | WS_POPUP   | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME
 EXSTYLE WS_EX_APPWINDOW
 // EXSTYLE WS_EX_CONTROLPARENT
 CAPTION "wFontList"
