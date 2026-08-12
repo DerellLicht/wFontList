@@ -31,9 +31,6 @@
 # der_libs/wthread.h:32:4: warning: function 'get_thread_ID' should be marked [[nodiscard]] 
 #    [modernize-use-nodiscard]
 
-
-
-
 Checks: >
   -*,
   bugprone-*,
