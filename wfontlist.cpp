@@ -22,6 +22,7 @@
 
 #include <windows.h>
 #include <tchar.h>
+#include <memory>
 // #include <shlobj.h>  //  including this, causes CDDS_PREPAINT and others to be undefined !!
 
 static const TCHAR* VerNum = _T("V1.09") ;
@@ -61,9 +62,12 @@ static lv_cols_s my_lv_cols[] = {
 { _T("Family"),      0, false, 0, false, NULL },
 { 0, 50, false, 0, false, NULL }} ;
 
-static CStatusBar *MainStatusBar = NULL;
-static CVListView *VListView = NULL ;
-static CFontList *FontList = NULL;  //  must be instantiated AFTER VListView
+// static CStatusBar *MainStatusBar = NULL;
+// static CVListView *VListView = NULL ;
+// static CFontList *FontList = NULL;  //  must be instantiated AFTER VListView
+static std::unique_ptr<CStatusBar> MainStatusBar {};
+static std::unique_ptr<CVListView> VListView {};
+static std::unique_ptr<CFontList> FontList {};
 
 static uint cxClient = 0;
 static uint cyClient = 0;   //  subtrace height of status bar
@@ -300,7 +304,8 @@ static bool do_init_dialog(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam
    //****************************************************************
    //  create/configure status bar first
    //****************************************************************
-   MainStatusBar = new CStatusBar(hwnd) ;
+   // MainStatusBar = new CStatusBar(hwnd) ;
+   MainStatusBar = std::make_unique<CStatusBar>(hwnd);
    MainStatusBar->MoveToBottom(term_window_width, term_window_height-1) ;
 
    //  re-position status-bar parts
@@ -318,7 +323,9 @@ static bool do_init_dialog(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam
    uint lvy0 = get_terminal_top();
    uint fudge_factor = 0 ;
    uint lvdy = term_window_height - fudge_factor - get_terminal_top() - MainStatusBar->height() ;   //lint !e737
-   VListView = new CVListView(hwnd, IDC_TERMINAL, g_hinst, 0, lvy0, cxClient-5, lvdy,
+   // VListView = new CVListView(hwnd, IDC_TERMINAL, g_hinst, 0, lvy0, cxClient-5, lvdy,
+   //       LVL_STY_VIRTUAL | LVL_STY_EX_GRIDLINES);
+   VListView = std::make_unique<CVListView>(hwnd, IDC_TERMINAL, g_hinst, 0, lvy0, cxClient-5, lvdy,
          LVL_STY_VIRTUAL | LVL_STY_EX_GRIDLINES);
    VListView->set_listview_font(_T("Times New Roman"), 140, 0) ;
    VListView->lview_assign_column_headers(&my_lv_cols[0], (LPARAM) 0) ;
@@ -332,7 +339,8 @@ static bool do_init_dialog(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam
    //****************************************************************
    //  create font-list class third, needs VListView control
    //****************************************************************
-   FontList = new CFontList(VListView) ;
+   // FontList = new CFontList(VListView.get()) ;
+   FontList = std::make_unique<CFontList>(VListView.get());
 
    redraw_font_list();
    return true ;
