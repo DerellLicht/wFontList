@@ -13,9 +13,6 @@
 #include "vlistview.h"
 #include "font_list.h"
 
-// CFontList::FontVListView  not directly freed or zeroed by destructor ... it shouldn't be...
-//lint -esym(1740, CFontList::FontVListView)
-
 //*************************************************************************
 CFontList::CFontList(CVListView *VListView) :
    FontVListView(VListView),
