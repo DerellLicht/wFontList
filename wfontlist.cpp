@@ -575,7 +575,7 @@ static void resize_font_dialog(bool resize_on_drag)
    MainStatusBar->MoveToBottom(term_window_width, term_window_height-1) ;
    //  resize the terminal (cols)
    int dxi = term_window_width  - dx_offset ;   //lint !e737
-   int dyi   = term_window_height - dy_offset - get_terminal_top() - MainStatusBar->height() ;   //lint !e737
+   int dyi = term_window_height - dy_offset - get_terminal_top() - MainStatusBar->height() ;   //lint !e737
    // VListView->resize_terminal_pixels(dxi, dyi) ;
    VListView->resize(dxi, dyi); //  dialog is actually drawn a few pixels too small for text
    // set_terminal_dimens() ;  //  do this *after* resize()
