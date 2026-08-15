@@ -1,5 +1,5 @@
 //**********************************************************************
-//  Copyright (c) 2009-2017  Daniel D Miller
+//  Copyright (c) 2009-2026  Daniel D Miller
 //  wfontlist.exe - A WinApi font-lister program
 //  
 //  Written by:   Daniel D. Miller
@@ -18,6 +18,7 @@
 //    1.08     Fix ERROR_MORE_DATA in RegEnumValue()
 //    1.09     > Automatically load font list at startup
 //             > make dialog height resizable
+//    1.10     Add config file, save/restore position and height
 //****************************************************************************
 
 #include <windows.h>
@@ -25,19 +26,16 @@
 #include <memory>
 // #include <shlobj.h>  //  including this, causes CDDS_PREPAINT and others to be undefined !!
 
-static const TCHAR* VerNum = _T("V1.09") ;
+static const TCHAR* VerNum = _T("V1.10") ;
 static char szClassName[] = "WFontList" ;
 
 #include "resource.h"
 #include "common.h"
 #include "commonw.h" //  build_font()
+#include "wfontlist.h"
 #include "statbar.h"
 #include "vlistview.h"
 #include "font_list.h"
-
-//  getfontfile.cpp
-extern void get_font_path(void);
-extern bool GetFontFile(LPCTSTR lpszFontName);
 
 //lint -esym(715, hwnd, private_data, message, wParam, lParam)
 //***********************************************************************
@@ -70,7 +68,7 @@ static std::unique_ptr<CVListView> VListView {};
 static std::unique_ptr<CFontList> FontList {};
 
 static uint cxClient = 0;
-static uint cyClient = 0;   //  subtrace height of status bar
+uint cyClient = 0;   //  subtrace height of status bar
 
 static HFONT hfontDefault = 0 ;
 static HMENU hPopMenu = 0 ;
@@ -310,6 +308,52 @@ static LRESULT ProcessCustomDraw(LPARAM lParam)
    return CDRF_DODEFAULT;
 }
 
+//****************************************************************
+//  Claude 08/15/26 - restore previously-saved window size/position
+//  from the .ini file. client_height/window_left/window_top were
+//  populated by init_config() above (which creates a default config
+//  file if one doesn't exist yet, so these are always valid here --
+//  no first-run guard needed). Width is never saved/restored since
+//  it's always locked to the dialog's fixed layout.
+//****************************************************************
+static void restore_dialog_settings(void)
+{
+   uint restored_win_width  = cxClient + (uint) dx_frame ;   //  width never changes
+   uint restored_win_height = client_height + (uint) dy_frame ;
+
+   //  clamp height to the same bounds WM_GETMINMAXINFO enforces --
+   //  screen resolution may have changed since this was last saved
+   if (restored_win_height < min_application_window_height) {
+      restored_win_height = min_application_window_height ;
+   }
+   uint max_win_height = (uint) get_screen_height() ;
+   if (restored_win_height > max_win_height) {
+      restored_win_height = max_win_height ;
+   }
+
+   //  clamp position to the current monitor (get_screen_width/height
+   //  reflect get_monitor_dimens(hwnd), already called above) so a saved
+   //  position from a monitor that's since been unplugged, or a screen
+   //  res that's since shrunk, doesn't put us off-screen
+   uint restored_left = window_left ;
+   uint restored_top  = window_top ;
+   uint scr_cx = (uint) get_screen_width() ;
+   uint scr_cy = (uint) get_screen_height() ;
+   if (restored_left + restored_win_width > scr_cx) {
+      restored_left = (restored_win_width < scr_cx) ? (scr_cx - restored_win_width) : 0 ;
+   }
+   if (restored_top + restored_win_height > scr_cy) {
+      restored_top = (restored_win_height < scr_cy) ? (scr_cy - restored_win_height) : 0 ;
+   }
+
+   //  applying this here (after all child controls exist) triggers
+   //  WM_SIZE synchronously, which runs resize_font_dialog() and lays
+   //  out the status bar/listview/etc. for the restored height --
+   //  no separate relayout call needed
+   SetWindowPos(hwndMain, NULL, (int) restored_left, (int) restored_top,
+      (int) restored_win_width, (int) restored_win_height, SWP_NOZORDER) ;
+}
+
 //*******************************************************************
 static bool do_init_dialog(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam, LPVOID private_data)
 {
@@ -319,6 +363,8 @@ static bool do_init_dialog(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam
    SetWindowText(hwnd, msgstr) ;
    hwndMain = hwnd ;
    get_monitor_dimens(hwnd);
+
+   init_config();
 
    SendMessage(hwnd, WM_SETICON, ICON_BIG,   (LPARAM) LoadIcon(g_hinst, MAKEINTRESOURCE(IDI_APPICON)));
    SendMessage(hwnd, WM_SETICON, ICON_SMALL, (LPARAM) LoadIcon(g_hinst, MAKEINTRESOURCE(IDI_APPICON)));
@@ -392,8 +438,11 @@ static bool do_init_dialog(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam
    //****************************************************************
    // FontList = new CFontList(VListView.get()) ;
    FontList = std::make_unique<CFontList>(VListView.get());
-
    redraw_font_list();
+   
+   //  restore previously-saved window size/position from the .ini file. 
+   restore_dialog_settings();
+   
    return true ;
 }
 
@@ -605,9 +654,10 @@ static void resize_font_dialog()
 
    MainStatusBar->MoveToBottom(cxClient, cyClient-1) ;
    //  resize the terminal (cols)
-   int dxi = cxClient-1 ;
    int dyi = (int) cyClient - dy_offset - (int) get_terminal_top() - MainStatusBar->height() ;   //lint !e737
-   VListView->resize(dxi, dyi); //  dialog is actually drawn a few pixels too small for text
+   VListView->resize(cxClient, dyi); //  dialog is actually drawn a few pixels too small for text
+
+   save_cfg_file();
 }
 
 //*************************************************************************************
@@ -676,16 +726,11 @@ bool do_sizing(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam, LPVOID pri
 }
 
 //*******************************************************************
-//  DDM 01/29/17 - These minima are not actually working;
-//  Perhaps this is due to Windowblinds ??
-//  Yes; this works fine on standard Windows 7
-//*******************************************************************
 static bool do_getminmaxinfo(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam, LPVOID private_data)
 {
    LPMINMAXINFO lpTemp = (LPMINMAXINFO) lParam;
    POINT        ptTemp;
-   // syslog("set minimum to %ux%u\n", cxClient, cyClient);
-   //  set minimum dimensions
+   
    //  Claude 08/14/26 - cxClient is a CLIENT-area size; ptMinTrackSize/
    //  ptMaxTrackSize must be WINDOW sizes (border+caption included), so add
    //  the frame delta captured at init. Width is pinned min==max to lock
@@ -696,6 +741,8 @@ static bool do_getminmaxinfo(HWND hwnd, UINT message, WPARAM wParam, LPARAM lPar
    //  Height floor comes from min_application_window_height.
    //  min_application_window_height is computed once in do_init_dialog 
    //  and never changes, which is what a track-size floor needs to be.
+   
+   //  set minimum dimensions
    ptTemp.x = (LONG) cxClient + dx_frame ;
    ptTemp.y = (LONG) min_application_window_height ;
    lpTemp->ptMinTrackSize = ptTemp;
@@ -715,8 +762,19 @@ static bool do_windowposchanging(HWND hwnd, UINT message, WPARAM wParam, LPARAM 
 {
    WINDOWPOS* pos = (WINDOWPOS*)lParam;
    if (!(pos->flags & SWP_NOSIZE)) {
-      pos->cx = cxClient-1;   // hardcoded, no private_data needed
+      pos->cx = cxClient;
    }
+   return true ;
+}
+
+//*******************************************************************
+static bool do_exitsizemove(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam, LPVOID private_data)
+{
+   RECT rect ;
+   GetWindowRect(hwnd, &rect);
+   window_top  = rect.top ;
+   window_left = rect.left ;
+   save_cfg_file();
    return true ;
 }
 
@@ -727,16 +785,16 @@ static bool do_windowposchanging(HWND hwnd, UINT message, WPARAM wParam, LPARAM 
 // } winproc_table_t ;
 
 static winproc_table_t const winproc_table[] = {
-{ WM_INITDIALOG,     do_init_dialog },
-{ WM_COMMAND,        do_command },
-// { WM_COMM_TASK_DONE, do_comm_task_done },
-{ WM_NOTIFY,         do_notify },
-{ WM_SIZE,           do_size },
+{ WM_INITDIALOG,        do_init_dialog },
+{ WM_COMMAND,           do_command },
+{ WM_NOTIFY,            do_notify },
+{ WM_SIZE,              do_size },
 // { WM_SIZING,         do_sizing },
+{ WM_GETMINMAXINFO,     do_getminmaxinfo },
 { WM_WINDOWPOSCHANGING, do_windowposchanging },
-{ WM_GETMINMAXINFO,  do_getminmaxinfo },
-{ WM_CLOSE,          do_close },
-{ WM_DESTROY,        do_destroy },
+{ WM_EXITSIZEMOVE,      do_exitsizemove },
+{ WM_CLOSE,             do_close },
+{ WM_DESTROY,           do_destroy },
 
 { 0, NULL } } ;
 

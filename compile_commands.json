@@ -169,5 +169,24 @@
    "getfontfile.o"
   ],
   "file": "getfontfile.cpp"
+ },
+ {
+  "directory": "D:\\SourceCode\\Git\\wFontList",
+  "arguments": [
+   "D:/llvm/bin/i686-w64-mingw32-clang++",
+   "-Wall",
+   "-O3",
+   "-c",
+   "-DUNICODE",
+   "-D_UNICODE",
+   "-Wno-write-strings",
+   "-Weffc++",
+   "-Wno-c++11-narrowing",
+   "-Ider_libs",
+   "config.cpp",
+   "-o",
+   "config.o"
+  ],
+  "file": "config.cpp"
  }
 ]

@@ -37,7 +37,7 @@ IFLAGS += -DNOMAKEDEPEND
 CFLAGS += -Ider_libs
 
 # add application files
-CAPPSRC=wfontlist.cpp font_list.cpp getfontfile.cpp
+CAPPSRC=wfontlist.cpp font_list.cpp getfontfile.cpp config.cpp
 
 CLIBSRC=der_libs/common_funcs.cpp \
 der_libs/common_win.cpp \
@@ -102,14 +102,15 @@ rc.o: wfontlist.rc
 
 # DO NOT DELETE
 
+wfontlist.o: resource.h der_libs/common.h der_libs/commonw.h wfontlist.h
+wfontlist.o: der_libs/statbar.h der_libs/vlistview.h font_list.h
+font_list.o: der_libs/common.h der_libs/commonw.h der_libs/vlistview.h
+font_list.o: font_list.h
+getfontfile.o: der_libs/common.h der_libs/commonw.h
+config.o: der_libs/common.h wfontlist.h
 der_libs/common_funcs.o: der_libs/common.h
 der_libs/common_win.o: der_libs/common.h der_libs/commonw.h
 der_libs/statbar.o: der_libs/common.h der_libs/commonw.h der_libs/statbar.h
 der_libs/wthread.o: der_libs/wthread.h
 der_libs/vlistview.o: der_libs/common.h der_libs/commonw.h
 der_libs/vlistview.o: der_libs/vlistview.h
-wfontlist.o: resource.h der_libs/common.h der_libs/commonw.h
-wfontlist.o: der_libs/statbar.h der_libs/vlistview.h font_list.h
-font_list.o: der_libs/common.h der_libs/commonw.h der_libs/vlistview.h
-font_list.o: font_list.h
-getfontfile.o: der_libs/common.h der_libs/commonw.h
