@@ -710,6 +710,15 @@ static bool do_getminmaxinfo(HWND hwnd, UINT message, WPARAM wParam, LPARAM lPar
    return true ;
 }
 
+//*******************************************************************
+static bool do_windowposchanging(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam, LPVOID private_data)
+{
+   WINDOWPOS* pos = (WINDOWPOS*)lParam;
+   if (!(pos->flags & SWP_NOSIZE)) {
+      pos->cx = cxClient-1;   // hardcoded, no private_data needed
+   }
+   return true ;
+}
 
 //*******************************************************************
 // typedef struct winproc_table_s {
@@ -724,6 +733,7 @@ static winproc_table_t const winproc_table[] = {
 { WM_NOTIFY,         do_notify },
 { WM_SIZE,           do_size },
 // { WM_SIZING,         do_sizing },
+{ WM_WINDOWPOSCHANGING, do_windowposchanging },
 { WM_GETMINMAXINFO,  do_getminmaxinfo },
 { WM_CLOSE,          do_close },
 { WM_DESTROY,        do_destroy },
