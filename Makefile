@@ -50,11 +50,14 @@ CSRC = $(CAPPSRC) $(CLIBSRC)
 
 OBJS = $(CSRC:.cpp=.o) rc.o
 
-BIN=wfontlist
-BINS=$(BIN).exe
+BASE=wfontlist
+BINS=$(BASE).exe
 
 LIBS = -lcomctl32
 
+# Automatically parse the latest version block
+VERSION := $(shell grep -oE '\[[0-9]+\.[0-9]+\]' CHANGELOG.md | head -n 1 | tr -d '[]')
+DIST_ZIP := $(BASE)V$(VERSION).zip
 #************************************************************
 %.o: %.cpp
 	$(TOOLS)/$(GNAME) $(CFLAGS) $< -o $@
@@ -85,9 +88,17 @@ cppc:
 check:
 	cmd /C "d:\llvm\bin\clang-tidy.exe $(CSRC) -- $(CFLAGS) "
 
+# Your new automated release workflow
+release:
+	cmd /C "@echo Preparing GitHub release for v$(VERSION)..."
+	sed -n '/## \['$(VERSION)'\]/,/## \[/p' CHANGELOG.md | sed '$$d' > temp_notes.md
+	gh release create v$(VERSION) ./$(DIST_ZIP) ./CHANGELOG.md --notes-file temp_notes.md
+	rm temp_notes.md
+	cmd /C "@echo Release v$(VERSION) successfully uploaded to GitHub!"
+	
 dist:
-	rm -f $(BIN).zip
-	zip $(BIN).zip $(BINS) readme.md
+	rm -f *.zip
+	zip $(DIST_ZIP) $(BINS) readme.md CHANGELOG.md
 
 depend:
 	makedepend $(CFLAGS) $(CSRC)
