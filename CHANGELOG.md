@@ -4,7 +4,8 @@
 - Add config file, save/restore position and height
 
 ## [1.09] - 2017-01-30
-- Automatically load font list at startup > make dialog height resizable
+- Automatically load font list at startup  
+- make dialog height resizable
 
 ## [1.08] - 2016-06-30
 - Fix ERROR_MORE_DATA in RegEnumValue()
