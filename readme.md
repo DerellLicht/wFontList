@@ -9,5 +9,5 @@ Obtain [source code](https://github.com/DerellLicht/wFontList) here
 
 Download [application](https://github.com/DerellLicht/bin/raw/master/wfontlist.zip) here
 
-See [text](CHANGELOG.md) for revision history
+See [Change Log](CHANGELOG.md) for revision history
 
