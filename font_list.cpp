@@ -67,7 +67,7 @@ font_list_p CFontList::find_font_element(uint target_idx)
 }
 
 //*********************************************************
-static bool const sort_name (font_list_s const &a, font_list_s const &b)
+static bool sort_name (font_list_s const &a, font_list_s const &b)
 {
    return (_tcsicmp (a.name, b.name) < 0) ;
 }
