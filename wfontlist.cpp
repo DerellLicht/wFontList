@@ -498,8 +498,11 @@ static bool do_command(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam, LP
          operating_mode = 1 ;
          enum_selected_rows();
          return true;
-      }  //lint !e744
-   } 
+         
+      default:
+         break ;
+      }  // switch(target)
+   } // if (cmd)
    return false ;
 }
 
@@ -573,7 +576,8 @@ static bool do_notify(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam, LPV
    case NM_CUSTOMDRAW:
       pnm = (LPNMLISTVIEW) lParam;
       if (VListView->is_lview_hwnd((HWND) pnm->hdr.hwndFrom)) {
-         SetWindowLongA(hwnd, DWL_MSGRESULT, (LONG) ProcessCustomDraw (lParam));
+         // SetWindowLongA(hwnd, DWL_MSGRESULT, (LONG) ProcessCustomDraw (lParam));
+         SetWindowLongPtr(hwnd, DWLP_MSGRESULT, static_cast<LONG_PTR>(ProcessCustomDraw(lParam)));
          return true ;  //  the absense of this, is why no more occurred!!
       }
       break;
@@ -782,8 +786,42 @@ static winproc_table_t const winproc_table[] = {
 
 { 0, NULL } } ;
 
-//*******************************************************************
-static LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
+//*****************************************************************************************
+// Dialog procedure for the main dialog (installed via CreateDialog).
+//
+// Signature notes:
+//
+//   Function POINTER TYPE (as defined in the Windows headers):
+//      typedef INT_PTR (CALLBACK *DLGPROC)(HWND, UINT, WPARAM, LPARAM);
+//
+//   Function DEFINITION (what we write; note there is no '*' here):
+//      static INT_PTR CALLBACK WndProc(HWND hwnd, UINT message,
+//                                      WPARAM wParam, LPARAM lParam)
+//
+//   - Return type is INT_PTR (pointer-sized) on both 32-bit and 64-bit builds.
+//     Older code used BOOL; that worked on 32-bit but is not 64-bit-correct.
+//   - CALLBACK is the calling convention (__stdcall on 32-bit, nothing on
+//     64-bit).  It must match what Windows uses to call us, or the stack is
+//     corrupted on 32-bit.  WINAPI and APIENTRY are equivalent macros.
+//   - Because the type matches DLGPROC exactly, CreateDialog() takes it with
+//     no cast.  A (DLGPROC) cast here would only hide a type mismatch.
+//
+// Returning data from a handler:
+//   Handlers return only handled/not-handled (bool).  To return a real value
+//   (e.g. NM_CUSTOMDRAW results), store it with
+//      SetWindowLongPtr(hwnd, DWLP_MSGRESULT, value);
+//   and return true.  DWL_MSGRESULT (no P) is 32-bit-only; do not use it.
+//   Never call DefWindowProc/DefDlgProc from a CreateDialog procedure.
+//*****************************************************************************************
+// Why online examples differ (all worked on 32-bit):
+//   - CALLBACK, WINAPI, APIENTRY are interchangeable (__stdcall); FAR PASCAL
+//     is the 16-bit-era form.
+//   - Dialog procs were BOOL CALLBACK in old code, INT_PTR CALLBACK in modern
+//     code; window procs are LRESULT CALLBACK.
+//   - Casts like (DLGPROC) or (WNDPROC) hid the mismatches; 64-bit checking
+//     exposes them.
+//*****************************************************************************************
+static INT_PTR CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
    uint idx ;
    for (idx=0; winproc_table[idx].win_code != 0; idx++) {
@@ -820,7 +858,7 @@ int APIENTRY WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance,
    get_font_path();
 
    //  create the main application
-   HWND hwnd = CreateDialog(hInstance, MAKEINTRESOURCE(IDD_MAIN_DIALOG), NULL, (DLGPROC) WndProc);
+   HWND hwnd = CreateDialog(hInstance, MAKEINTRESOURCE(IDD_MAIN_DIALOG), NULL, WndProc);
    if (hwnd == NULL) {
       // Notified your about the failure
       syslog(_T("CreateDialog (main): %s [%u]\n"), get_system_message(), GetLastError()) ;

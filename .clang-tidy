@@ -10,16 +10,26 @@
 # der_libs/common_funcs.cpp:292:10: warning: do not access members of unions; 
 #    consider using (boost::)variant instead 
 #    [cppcoreguidelines-pro-type-union-access]
-
+# If it works for you, the walk-back gets much simpler. 
+# Instead of fixing const X&& across der_libs, you can delete the move declarations 
+# from the classes where copy is already deleted and let the option keep clang-tidy quiet. 
+# Each class shrinks to explicit constructor, destructor, and the two deleted copy operations.
+# 
+# Then the "oh damn" pile mostly shrinks to two questions per class: 
+# does it hold raw pointers or other owned resources (so copy really must be deleted), 
+# and does it have a single-argument constructor that needs explicit.
+   
 Checks: >
   -*,
   bugprone-*,
   -bugprone-easily-swappable-parameters,
   -bugprone-narrowing-conversions,
   -bugprone-switch-missing-default-case,
+  -bugprone-signed-bitwise,
   clang-analyzer-*,
   clang-diagnostic-*,
   cppcoreguidelines-*,
+  cppcoreguidelines-special-member-functions,
   -cppcoreguidelines-pro-type-reinterpret-cast,
   -cppcoreguidelines-avoid-c-arrays,
   -cppcoreguidelines-macro-usage,
@@ -52,4 +62,8 @@ Checks: >
   -modernize-use-default-member-init,
   performance-*,
   -performance-no-int-to-ptr,
+
+CheckOptions:
+  - key: cppcoreguidelines-special-member-functions.AllowMissingMoveFunctionsWhenCopyIsDeleted
+    value: true
   

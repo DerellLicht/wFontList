@@ -32,17 +32,18 @@ private:
       ENUMLOGFONTEX *lpelfe, NEWTEXTMETRICEX *lpntme, int FontType, LPARAM lParam );
 
 public:
-   //  disable default constructor
-   CFontList() = delete;
-   CFontList(CVListView *VListView);
-   ~CFontList() ;
+   //  disable default constructor (not needed if any other constructor is declared,
+   //  since that suppresses the implicit default constructor; kept as documentation)
+   //  CFontList() = delete;   
+   explicit CFontList(CVListView *VListView);
+   ~CFontList();
    //  disable copy assignment and copy operators
    CFontList &operator=(const CFontList &src) = delete;
    CFontList(const CFontList&) = delete;
    
    //  disable move assignment and move operators
-   CFontList &operator=(const CFontList &&src) = delete;
-   CFontList(const CFontList&&) = delete;
+   // CFontList &operator=(CFontList &&src) = delete;
+   // CFontList(CFontList&&) = delete;
    
    void build_font_list(void);
    void sort_font_list(void);
